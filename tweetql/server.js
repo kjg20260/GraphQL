@@ -1,26 +1,41 @@
 import { ApolloServer, gql } from "apollo-server";
 
-const tweets = [
+let tweets = [
     {
         id : "1",
-        text : "first"
+        text : "first",
+        userId : "2"
     },
     {
         id : "2",
-        text : "second"
+        text : "second",
+        userId : "1"
     },
     {
         id : "3",
-        text : "third"
+        text : "third",
+        userId : "1"
+    }
+]
+
+let users = [
+    {
+        id:"1",
+        firstName : "Jonggwan",
+        lastName : 'Kim'
+    },{
+        id:"2",
+        firstName : "Jonggwan2",
+        lastName : 'Kim'
     }
 ]
 
 const typeDefs = gql`
     type User {
         id : ID!
-        username : String!
         firstName : String!
-        lastName : String
+        lastName : String!
+        fullName : String!
     }
 
     type Tweet {
@@ -30,6 +45,7 @@ const typeDefs = gql`
     }
 
     type Query {
+        allUsers : [User!]!
         allTweets : [Tweet!]!
         tweet(id : ID!) : Tweet
     }
@@ -42,11 +58,42 @@ const typeDefs = gql`
 
 const resolvers = {
     Query : {
+        allUsers(){
+            console.log('allUsers called');
+            return users;
+        },
         allTweets(){
-            return tweets
+            return tweets;
         },
         tweet(root, {id}){
             return tweets.find(tweet => tweet.id === id);
+        }
+    },
+    Mutation : {
+        postTweet(_, {text,userId}){
+            const newTweet = {
+                id : tweets.length + 1,
+                text
+            };
+            tweets.push(newTweet);
+            return newTweet;
+        },
+        deleteTweet(_,{id}){
+            const tweet = tweets.find((tweet) => tweet.id === id );
+            if(!tweet) return false;
+            tweets = tweets.filter((tweet) =>tweet.id !== id);
+            return true;
+        }
+    },
+    User : {
+        fullName({firstName, lastName}){
+            console.log('fullName called');
+            return `${lastName} ${firstName}`;
+        }
+    },
+    Tweet : {
+        author({userId}){
+            return users.find((user)=> user.id === userId);
         }
     }
 }
