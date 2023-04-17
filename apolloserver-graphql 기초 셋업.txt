@@ -1,0 +1,68 @@
+1. 디렉토리 생성
+
+2. npm init -y
+
+3. npm install apollo-server graphql  #apollo-server, graphql 설치
+
+4. npm i nodemon -D
+
+5. package.json 수정
+scripts : {
+	dev : nodemon server.js
+},
+type : module
+6. server.js 생성 후 작성
+
+예시)
+import {ApollloServer, gql} from "apollo-server";
+const api_key = 'b4f38c6dc05658822ec6a4fec0d9f6cd';
+const typeDefs = gql`
+    """
+    영화 정보 객체
+    """
+    type Movie {
+        id : ID!
+        title : String!
+        overview : String!
+        genres : [String!]!
+        poster_path : String!
+        runtime : Int!
+        vote_average : Float!
+    }
+
+    type Query {
+        """
+        영화정보 모음 가져오기
+        """
+        allPopularMovie : [Movie!]!
+        """
+        id를 통해 영화정보 가져오기
+        """
+        movie(id : ID!) : Movie
+    }
+
+    type Mutation {
+    }
+`;
+
+const resolvers = {
+    Query : {
+        allPopularMovie(){
+            return fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${api_key}`)
+                .then(r=>r.json())
+                .then((json)=>json.results);
+        },
+        movie(_,{id}){
+            return fetch(`https://yts.mx/api/v2/movie_details.json?movie_id=${id}`)
+                .then(r=>r.json())
+                .then((json) => json.data.movie);
+        }
+    },
+    Mutation : {
+    },
+}
+const server = new ApolloServer({typeDefs,resolvers});
+
+server.listen().then(({url})=>{
+    console.log(`Running on ${url}`);
+})
